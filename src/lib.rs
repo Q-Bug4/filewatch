@@ -1,3 +1,5 @@
+mod event_handler;
+
 #[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub struct InputConfig {
     path: String,

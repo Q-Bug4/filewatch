@@ -1,3 +1,5 @@
+mod event_handler;
+
 use std::{env, process};
 use filewatch::get_input_config;
 
