@@ -1,7 +1,8 @@
-mod event_handler;
-
 use std::{env, process};
+
 use filewatch::get_input_config;
+
+mod event_handler;
 
 fn main() -> Result<(), String> {
     let args: Vec<String> = env::args().collect();
