@@ -26,7 +26,7 @@ impl FileEventHandler for MoveFileHandler {
     fn handle_file_event(&self, file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
         // 检查文件是否存在，如果不存在则直接返回
         if !file_path.exists() {
-            eprintln!("{file_path} not exist");
+            eprintln!("{} not exist", file_path.to_str().unwrap());
             return Ok(());
         }
 
