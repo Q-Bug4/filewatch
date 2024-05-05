@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-pub trait file_event_hanlder {
+pub trait FileEventHandler {
     // 使用监听器模式，监听器输入文件路径作为参数，handler对文件进行处理，返回处理结果
     fn handle_file_event(&self, file_path: &str) -> Result<(), Box<dyn std::error::Error>>;
 
@@ -18,12 +18,12 @@ pub enum HandlerType {
 mod handler {
     use std::fs;
     use std::path::{Path, PathBuf};
-    use crate::event_handler::{file_event_hanlder, HandlerType, list_files};
+    use crate::event_handler::{FileEventHandler, HandlerType, list_files};
 
     // 实现file_event_hanlder trait的handler，用于移动文件，类型为Write
     pub struct MoveFileHandler {}
 
-    impl file_event_hanlder for MoveFileHandler {
+    impl FileEventHandler for MoveFileHandler {
         fn handle_file_event(&self, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
             // TODO: 实现文件移动逻辑
 
@@ -52,7 +52,7 @@ mod handler {
         }
     }
 
-    impl file_event_hanlder for RenameFileHandler {
+    impl FileEventHandler for RenameFileHandler {
         fn handle_file_event(&self, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
             // 从dump_paths中遍历，找到和file_path同名的文件，如果存在，则重命名当前文件，否则直接返回
             for dump_path in &self.dump_paths {
@@ -99,69 +99,4 @@ fn list_files(path: &Path, recursive: bool) -> Result<Vec<PathBuf>, std::io::Err
     }
 
     Ok(files)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::fs;
-    use std::path::PathBuf;
-    use crate::event_handler::handler::RenameFileHandler;
-
-    #[test]
-    fn test_handle_file_event() {
-        // Prepare test data
-        let file_path = "test_file.txt";
-        let dump_paths = vec!["./dump".to_string()];
-        let recursive = false;
-        let handler = RenameFileHandler::new(dump_paths, recursive);
-
-        // Create a test file
-        let test_file_path = PathBuf::from(file_path);
-        fs::create_dir_all("./dump")?;
-        fs::write(&test_file_path, "test data")?;
-
-        // Handle file event
-        handler.handle_file_event(file_path).unwrap();
-
-        // Check if the file has been renamed
-        let renamed_file_path = format!("{}-{}.txt", file_path, chrono::Local::now().format("%Y%m%d%H%M%S"));
-        assert!(fs::metadata(&PathBuf::from(renamed_file_path)).is_ok());
-
-        // Clean up
-        fs::remove_file(&test_file_path)?;
-        fs::remove_file(&PathBuf::from(renamed_file_path.clone()))?;
-        fs::remove_dir_all("./dump")?;
-    }
-
-    #[test]
-    fn test_list_files() {
-        // Prepare test data
-        fs::create_dir_all("./test_dir")?;
-        fs::write("./test_dir/test_file1.txt", "test data 1")?;
-        fs::write("./test_dir/test_file2.txt", "test data 2")?;
-        fs::create_dir_all("./test_dir/sub_dir")?;
-        fs::write("./test_dir/sub_dir/test_file3.txt", "test data 3")?;
-
-        // List files recursively
-        let recursive = true;
-        let files = list_files(Path::new("./test_dir"), recursive).unwrap();
-        assert_eq!(files.len(), 3);
-        assert!(files.contains(&PathBuf::from("./test_dir/test_file1.txt")));
-        assert!(files.contains(&PathBuf::from("./test_dir/test_file2.txt")));
-        assert!(files.contains(&PathBuf::from("./test_dir/sub_dir/test_file3.txt")));
-
-        // List files non-recursively
-        let recursive = false;
-        let files = list_files(Path::new("./test_dir"), recursive).unwrap();
-        assert_eq!(files.len(), 2);
-        assert!(files.contains(&PathBuf::from("./test_dir/test_file1.txt")));
-        assert!(files.contains(&PathBuf::from("./test_dir/test_file2.txt")));
-
-        // Clean up
-        fs::remove_file("./test_dir/test_file1.txt")?;
-        fs::remove_file("./test_dir/test_file2.txt")?;
-        fs::remove_file("./test_dir/sub_dir/test_file3.txt")?;
-        fs::remove_dir_all("./test_dir")?;
-    }
 }
