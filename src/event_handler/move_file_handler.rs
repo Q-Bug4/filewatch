@@ -33,14 +33,54 @@ impl FileEventHandler for MoveFileHandler {
         let mut new_file_path = PathBuf::from(file_path);
         let has_dup = self.rename_handler.should_rename(file_path.file_name().unwrap().to_str().unwrap().to_string(), &self.target_folder);
         if has_dup {
-            new_file_path = PathBuf::from(format_filename_with_timestamp(file_path.to_str().unwrap()));
+            new_file_path = PathBuf::from(file_path).with_file_name(format_filename_with_timestamp(file_path.to_str().unwrap()));
+            fs::rename(file_path, &new_file_path)?;
         }
 
-        fs::rename(file_path, &new_file_path)?;
         Ok(())
     }
 
     fn get_handler_type(&self) -> HandlerType {
         HandlerType::Write
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const target_folder: &'static str = "./tmp/target";
+
+    #[test]
+    fn test_handle_file_event_file_exists() {
+        // Arrange
+        let target_path = PathBuf::from(target_folder);
+        let handler = MoveFileHandler::new(target_path.clone());
+        let file_path = PathBuf::from("./tmp/file.txt");
+
+        // Act
+        fs::create_dir_all(&target_path).unwrap();
+        fs::write(&file_path, "test data").unwrap();
+        handler.handle_file_event(&file_path).unwrap();
+
+        // Assert
+        assert!(!file_path.exists());
+        let new_file_path = target_path.join("file.txt");
+        assert!(new_file_path.exists());
+        let contents = fs::read_to_string(&new_file_path).unwrap();
+        assert_eq!("test data", contents);
+    }
+
+    #[test]
+    fn test_handle_file_event_file_not_exists() {
+        // Arrange
+        let handler = MoveFileHandler::new(PathBuf::from(target_folder));
+        let file_path = PathBuf::from("./tmp/file2.txt");
+
+        // Act
+        handler.handle_file_event(&file_path).unwrap();
+
+        // Assert
+        assert!(!file_path.exists());
     }
 }
