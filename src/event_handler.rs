@@ -2,7 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 mod move_file_handler;
-mod rename_file_handler;
+pub mod rename_file_handler;
 
 pub trait FileEventHandler {
     // 使用监听器模式，监听器输入文件路径作为参数，handler对文件进行处理，返回处理结果

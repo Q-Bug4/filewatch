@@ -7,7 +7,6 @@ use crate::event_handler::{FileEventHandler, format_filename_with_timestamp, Han
 pub struct RenameFileHandler {
     // 添加dup_path字段，用于识别文件在该path下是否有重名
     dup_paths: Vec<PathBuf>,
-    // TODO 添加是否递归字段，若该字段为true，则递归处理文件夹
     recursive: bool,
 }
 
