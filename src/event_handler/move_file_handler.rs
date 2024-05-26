@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 
-use crate::event_handler::{FileEventHandler, format_filename_with_timestamp, HandlerType};
+use crate::event_handler::{FileEventHandler, format_filename_with_timestamp};
 use crate::event_handler::rename_file_handler::RenameFileHandler;
 
 // 实现file_event_handler trait的handler，用于移动文件，类型为Write
@@ -38,10 +38,6 @@ impl FileEventHandler for MoveFileHandler {
         }
 
         Ok(())
-    }
-
-    fn get_handler_type(&self) -> HandlerType {
-        HandlerType::Write
     }
 }
 

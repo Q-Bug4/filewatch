@@ -7,15 +7,6 @@ pub mod rename_file_handler;
 pub trait FileEventHandler {
     // 使用监听器模式，监听器输入文件路径作为参数，handler对文件进行处理，返回处理结果
     fn handle_file_event(&self, file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>>;
-
-    // 获取handler的类型，返回一个枚举
-    fn get_handler_type(&self) -> HandlerType;
-}
-
-// 枚举HandlerType，用于区分不同类型的handler，区分读操作和写操作
-pub enum HandlerType {
-    Read,
-    Write,
 }
 
 fn format_filename_with_timestamp(filename: &str) -> String {

@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::event_handler::{FileEventHandler, format_filename_with_timestamp, HandlerType, list_files};
+use crate::event_handler::{FileEventHandler, format_filename_with_timestamp, list_files};
 
 // 实现file_event_handler trait的handler，用于重命名文件，类型为Write
 pub struct RenameFileHandler {
@@ -33,10 +33,6 @@ impl FileEventHandler for RenameFileHandler {
         }
 
         Ok(())
-    }
-
-    fn get_handler_type(&self) -> HandlerType {
-        HandlerType::Write
     }
 }
 
