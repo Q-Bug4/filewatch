@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 
-use crate::event_handler::{FileEventHandler, format_filename_with_timestamp};
+use crate::event_handler::{Processor, format_filename_with_timestamp, ProcessorFailure};
 use crate::event_handler::rename_file_handler::RenameFileHandler;
 
 // 实现file_event_handler trait的handler，用于移动文件，类型为Write
@@ -22,8 +22,8 @@ impl MoveFileHandler {
     }
 }
 
-impl FileEventHandler for MoveFileHandler {
-    fn handle_file_event(&self, file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+impl Processor for MoveFileHandler {
+    fn proceed(&self, file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
         // 检查文件是否存在，如果不存在则直接返回
         if !file_path.exists() {
             eprintln!("{} not exist", file_path.to_str().unwrap());
@@ -38,6 +38,10 @@ impl FileEventHandler for MoveFileHandler {
         }
 
         Ok(())
+    }
+
+    fn get_name() -> String {
+        "move".to_string()
     }
 }
 
@@ -57,7 +61,7 @@ mod tests {
         // Act
         fs::create_dir_all(&target_path).unwrap();
         fs::write(&file_path, "test data").unwrap();
-        handler.handle_file_event(&file_path).unwrap();
+        handler.proceed(&file_path).unwrap();
 
         // Assert
         assert!(!file_path.exists());
@@ -74,7 +78,7 @@ mod tests {
         let file_path = PathBuf::from("./tmp/file2.txt");
 
         // Act
-        handler.handle_file_event(&file_path).unwrap();
+        handler.proceed(&file_path).unwrap();
 
         // Assert
         assert!(!file_path.exists());
