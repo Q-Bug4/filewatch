@@ -17,6 +17,12 @@ pub trait Processor {
 
 pub struct ProcessorFailure {}
 
+fn is_file_exist(target_path: &PathBuf, file_name: String) -> bool {
+    // 判断target_path下是否有文件file_name
+    let file_path = target_path.join(file_name);
+    file_path.exists()
+}
+
 fn format_filename_with_timestamp(filename: &str) -> String {
     let now = chrono::Local::now();
     let timestamp = now.format("%Y%m%d%H%M%S").to_string();
