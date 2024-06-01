@@ -22,22 +22,97 @@ impl Processor for MoveFileHandler {
     fn proceed(&self, file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
         // 检查文件是否存在，如果不存在则直接返回
         if !file_path.exists() {
-            eprintln!("{} not exist", file_path.to_str().unwrap());
-            return Ok(());
+            // 返回错误信息
+            return Err(format!("{} not exist", file_path.to_str().unwrap()).into());
         }
 
-        let mut new_file_path = PathBuf::from(file_path);
         let has_dup = is_file_exist(&self.target_folder, file_path.file_name().unwrap().to_str().unwrap().to_string());
-        if has_dup {
-            new_file_path = PathBuf::from(file_path).with_file_name(format_filename_with_timestamp(file_path.to_str().unwrap()));
-            fs::rename(file_path, &new_file_path)?;
-        }
+        let new_file_name = if has_dup {
+            format_filename_with_timestamp(file_path.file_name().unwrap().to_str().unwrap())
+        } else {
+            file_path.file_name().unwrap().to_str().unwrap().to_string()
+        };
+        // 以target_folder/new_file_name生成目标路径
+        let new_file_path = self.target_folder.join(new_file_name);
+        fs::rename(file_path, &new_file_path)?;
 
         Ok(())
     }
+
 
     fn get_name() -> String {
         "move".to_string()
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs::{self, File};
+    use std::io::Write;
+    use tempfile::tempdir;
+
+    fn create_temp_file(dir: &PathBuf, filename: &str, content: &str) -> PathBuf {
+        let file_path = dir.join(filename);
+        let mut file = File::create(&file_path).unwrap();
+        writeln!(file, "{}", content).unwrap();
+        file_path
+    }
+
+    fn format_filename_with_timestamp(filename: &str) -> String {
+        format!("{}_timestamp", filename)
+    }
+
+    fn is_file_exist(target_folder: &PathBuf, filename: String) -> bool {
+        target_folder.join(filename).exists()
+    }
+
+    #[test]
+    fn test_proceed_file_exists_no_dup() {
+        let temp_dir = tempdir().unwrap();
+        let target_dir = temp_dir.path().join("target");
+        fs::create_dir(&target_dir).unwrap();
+
+        let file_path = create_temp_file(&temp_dir.path().to_path_buf(), "test.txt", "test content");
+        let handler = MoveFileHandler::new(target_dir.clone());
+
+        let result = handler.proceed(&file_path);
+        assert!(result.is_ok());
+
+        let moved_file_path = target_dir.join("test.txt");
+        assert!(moved_file_path.exists());
+    }
+
+    #[test]
+    fn test_proceed_file_exists_with_dup() {
+        let temp_dir = tempdir().unwrap();
+        let target_dir = temp_dir.path().join("target");
+        fs::create_dir(&target_dir).unwrap();
+
+        let file_path = create_temp_file(&temp_dir.path().to_path_buf(), "test.txt", "test content");
+        create_temp_file(&target_dir, "test.txt", "existing content");
+
+        let handler = MoveFileHandler::new(target_dir.clone());
+
+        let result = handler.proceed(&file_path);
+        assert!(result.is_ok());
+        assert!(!file_path.exists());
+    }
+
+    #[test]
+    fn test_proceed_file_does_not_exist() {
+        let temp_dir = tempdir().unwrap();
+        let target_dir = temp_dir.path().join("target");
+        fs::create_dir(&target_dir).unwrap();
+
+        let file_path = temp_dir.path().join("nonexistent.txt");
+        let handler = MoveFileHandler::new(target_dir.clone());
+
+        let result = handler.proceed(&file_path);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            format!("{} not exist", file_path.to_str().unwrap())
+        );
+    }
+}

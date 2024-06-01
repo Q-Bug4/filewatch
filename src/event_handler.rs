@@ -11,7 +11,6 @@ pub trait Processor {
     fn get_name() -> String;
 
     fn on_fail(failure: ProcessorFailure) {
-        !todo!()
     }
 }
 
@@ -23,7 +22,7 @@ fn is_file_exist(target_path: &PathBuf, file_name: String) -> bool {
     file_path.exists()
 }
 
-fn format_filename_with_timestamp(filename: &str) -> String {
+pub fn format_filename_with_timestamp(filename: &str) -> String {
     let now = chrono::Local::now();
     let timestamp = now.format("%Y%m%d%H%M%S").to_string();
     let extension = Path::new(filename).extension().unwrap().to_str().unwrap();
