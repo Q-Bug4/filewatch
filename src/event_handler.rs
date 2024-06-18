@@ -9,9 +9,6 @@ pub trait Processor {
     fn proceed(&self, file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>>;
 
     fn get_name() -> String;
-
-    fn on_fail(failure: ProcessorFailure) {
-    }
 }
 
 pub struct ProcessorFailure {}
