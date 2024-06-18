@@ -1,15 +1,15 @@
 use std::fs;
 use std::path::PathBuf;
 
-use crate::event_handler::{format_filename_with_timestamp, is_file_exist, Processor};
+use crate::processor::{format_filename_with_timestamp, is_file_exist, Processor};
 
-// 实现file_event_handler trait的handler，用于移动文件，类型为Write
-pub struct MoveFileHandler {
+// 实现file_event_processor trait的processor，用于移动文件，类型为Write
+pub struct MoveFileProcessor {
     // 添加目标文件夹字段，用于将文件移动到目标文件夹
     target_folder: PathBuf,
 }
 
-impl MoveFileHandler {
+impl MoveFileProcessor {
     // 构造函数，初始化目标文件夹和dup_paths字段
     pub fn new(target_folder: PathBuf) -> Self {
         Self {
@@ -18,7 +18,7 @@ impl MoveFileHandler {
     }
 }
 
-impl Processor for MoveFileHandler {
+impl Processor for MoveFileProcessor {
     fn proceed(&self, file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
         // 检查文件是否存在，如果不存在则直接返回
         if !file_path.exists() {
@@ -74,9 +74,9 @@ mod tests {
         fs::create_dir(&target_dir).unwrap();
 
         let file_path = create_temp_file(&temp_dir.path().to_path_buf(), "test.txt", "test content");
-        let handler = MoveFileHandler::new(target_dir.clone());
+        let processor = MoveFileProcessor::new(target_dir.clone());
 
-        let result = handler.proceed(&file_path);
+        let result = processor.proceed(&file_path);
         assert!(result.is_ok());
 
         let moved_file_path = target_dir.join("test.txt");
@@ -92,9 +92,9 @@ mod tests {
         let file_path = create_temp_file(&temp_dir.path().to_path_buf(), "test.txt", "test content");
         create_temp_file(&target_dir, "test.txt", "existing content");
 
-        let handler = MoveFileHandler::new(target_dir.clone());
+        let processor = MoveFileProcessor::new(target_dir.clone());
 
-        let result = handler.proceed(&file_path);
+        let result = processor.proceed(&file_path);
         assert!(result.is_ok());
         assert!(!file_path.exists());
     }
@@ -106,9 +106,9 @@ mod tests {
         fs::create_dir(&target_dir).unwrap();
 
         let file_path = temp_dir.path().join("nonexistent.txt");
-        let handler = MoveFileHandler::new(target_dir.clone());
+        let processor = MoveFileProcessor::new(target_dir.clone());
 
-        let result = handler.proceed(&file_path);
+        let result = processor.proceed(&file_path);
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err().to_string(),

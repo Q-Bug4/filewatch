@@ -1,19 +1,19 @@
-use crate::event_handler::Processor;
+use crate::processor::Processor;
 
 pub struct Pipeline {
-    handlers: Vec<Box<dyn Processor>>,
+    processors: Vec<Box<dyn Processor>>,
 }
 
 impl Pipeline {
-    pub fn new(handlers: Vec<Box<dyn Processor>>) -> Self {
+    pub fn new(processors: Vec<Box<dyn Processor>>) -> Self {
         Self {
-            handlers,
+            processors,
         }
     }
 
     pub fn run(&self) {
-        for handler in &self.handlers {
-            handler.process();
+        for processor in &self.processors {
+            processor.process();
         }
     }
 }
