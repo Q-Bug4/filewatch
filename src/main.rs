@@ -1,21 +1,19 @@
-use std::{env, process};
-
-use filewatch::get_input_config;
+use std::path::{Path, PathBuf};
+use notify::{RecursiveMode, Watcher};
+use crate::pipeline::Pipeline;
+use crate::processor::move_file_processor::MoveFileProcessor;
 
 mod processor;
+mod pipeline;
 
 fn main() -> Result<(), String> {
-    let args: Vec<String> = env::args().collect();
-    let input_config = get_input_config(args);
-    // 判断input_config是否成功
-    if let Err(e) = input_config {
-        eprintln!("Err: {}", e);
-        process::exit(1);
+    let processor = MoveFileProcessor::new(PathBuf::from("/home/qbug/tmp/target"));
+    let mut pipeline = Pipeline::new(vec![Box::new(processor)], PathBuf::from("/home/qbug/tmp"));
+    pipeline.start();
+    loop {
+        println!("sleep...");
+        std::thread::sleep(std::time::Duration::from_secs(1));
     }
-
-    let config = input_config?;
-
-    println!("{:?}", config);
 
     Ok(())
 }

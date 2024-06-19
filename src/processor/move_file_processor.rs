@@ -19,6 +19,12 @@ impl MoveFileProcessor {
 }
 
 impl Processor for MoveFileProcessor {
+    /**
+        move file into target_folder.
+        - when file is not exist, return error.
+        - when file exist in target_folder, rename file with timestamp.
+        - or just move file into target_folder
+    */
     fn proceed(&self, file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
         // 检查文件是否存在，如果不存在则直接返回
         if !file_path.exists() {
