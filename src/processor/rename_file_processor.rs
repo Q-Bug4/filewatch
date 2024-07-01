@@ -35,7 +35,7 @@ impl Processor for RenameFileProcessor {
         Ok(())
     }
 
-    fn get_name() -> String {
+    fn get_name(&self) -> String {
         "rename".to_string()
     }
 }

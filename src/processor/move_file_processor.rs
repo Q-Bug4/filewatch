@@ -46,7 +46,7 @@ impl Processor for MoveFileProcessor {
     }
 
 
-    fn get_name() -> String {
+    fn get_name(&self) -> String {
         "move".to_string()
     }
 }
