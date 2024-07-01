@@ -1,24 +1,25 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-mod move_file_handler;
-pub mod rename_file_handler;
+pub mod move_file_processor;
+pub mod rename_file_processor;
 
-pub trait FileEventHandler {
-    // 使用监听器模式，监听器输入文件路径作为参数，handler对文件进行处理，返回处理结果
-    fn handle_file_event(&self, file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>>;
+pub trait Processor {
+    // 使用监听器模式，监听器输入文件路径作为参数，processor对文件进行处理，返回处理结果
+    fn proceed(&self, file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>>;
 
-    // 获取handler的类型，返回一个枚举
-    fn get_handler_type(&self) -> HandlerType;
+    fn get_name(&self) -> String;
 }
 
-// 枚举HandlerType，用于区分不同类型的handler，区分读操作和写操作
-pub enum HandlerType {
-    Read,
-    Write,
+pub struct ProcessorFailure {}
+
+fn is_file_exist(target_path: &PathBuf, file_name: String) -> bool {
+    // 判断target_path下是否有文件file_name
+    let file_path = target_path.join(file_name);
+    file_path.exists()
 }
 
-fn format_filename_with_timestamp(filename: &str) -> String {
+pub fn format_filename_with_timestamp(filename: &str) -> String {
     let now = chrono::Local::now();
     let timestamp = now.format("%Y%m%d%H%M%S").to_string();
     let extension = Path::new(filename).extension().unwrap().to_str().unwrap();

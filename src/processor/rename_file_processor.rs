@@ -1,16 +1,16 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::event_handler::{FileEventHandler, format_filename_with_timestamp, HandlerType, list_files};
+use crate::processor::{Processor, format_filename_with_timestamp, list_files};
 
-// 实现file_event_handler trait的handler，用于重命名文件，类型为Write
-pub struct RenameFileHandler {
+// 实现file_event_processor trait的processor，用于重命名文件，类型为Write
+pub struct RenameFileProcessor {
     // 添加dup_path字段，用于识别文件在该path下是否有重名
     dup_paths: Vec<PathBuf>,
     recursive: bool,
 }
 
-impl RenameFileHandler {
+impl RenameFileProcessor {
     pub fn new(dup_paths: Vec<PathBuf>, recursive: bool) -> Self {
         Self {
             dup_paths,
@@ -19,8 +19,8 @@ impl RenameFileHandler {
     }
 }
 
-impl FileEventHandler for RenameFileHandler {
-    fn handle_file_event(&self, file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+impl Processor for RenameFileProcessor {
+    fn proceed(&self, file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
         let filename = Path::new(file_path).file_name().unwrap().to_str().unwrap();
 
         let result = self.dup_paths.iter()
@@ -35,12 +35,12 @@ impl FileEventHandler for RenameFileHandler {
         Ok(())
     }
 
-    fn get_handler_type(&self) -> HandlerType {
-        HandlerType::Write
+    fn get_name(&self) -> String {
+        "rename".to_string()
     }
 }
 
-impl RenameFileHandler {
+impl RenameFileProcessor {
     pub fn should_rename(&self, filename: String, target_path: &PathBuf) -> bool {
         if target_path.exists() {
             // 调用list_files方法，判断filename在不在该目录下的文件里
@@ -72,10 +72,10 @@ mod tests {
         File::create(&file_path).unwrap().write_all(b"content").unwrap();
 
         // 初始化重命名处理器
-        let handler = RenameFileHandler::new(vec![tmp_dir.path().to_path_buf()], true);
+        let processor = RenameFileProcessor::new(vec![tmp_dir.path().to_path_buf()], true);
 
         // 执行处理事件
-        handler.handle_file_event(&file_path.clone().into()).unwrap();
+        processor.proceed(&file_path.clone().into()).unwrap();
 
         // 验证：原文件不应被重命名
         assert!(&file_path.exists());
@@ -95,10 +95,10 @@ mod tests {
         File::create(tmp_dir_duplicate.path().join("duplicate.txt")).unwrap(); // 创建同名文件
 
         // 初始化重命名处理器，指向可能含有重复文件的目录
-        let handler = RenameFileHandler::new(vec![tmp_dir_duplicate.path().to_path_buf()], true);
+        let processor = RenameFileProcessor::new(vec![tmp_dir_duplicate.path().to_path_buf()], true);
 
         // 执行处理事件
-        handler.handle_file_event(&file_path.clone().into()).unwrap();
+        processor.proceed(&file_path.clone().into()).unwrap();
 
         // 验证：原文件应被重命名
         assert!(!file_path.exists()); // 假设重命名成功
@@ -116,10 +116,10 @@ mod tests {
         let file_path = tmp_dir.path().join("test.txt");
 
         // 初始化重命名处理器
-        let handler = RenameFileHandler::new(vec![tmp_dir.path().to_path_buf()], true);
+        let processor = RenameFileProcessor::new(vec![tmp_dir.path().to_path_buf()], true);
 
         // 执行处理事件
-        let result = handler.handle_file_event(&file_path);
+        let result = processor.proceed(&file_path);
         assert!(result.is_ok());
 
         // 清理目录和文件

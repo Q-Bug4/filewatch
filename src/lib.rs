@@ -1,4 +1,5 @@
-mod event_handler;
+mod processor;
+mod pipeline;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub struct InputConfig {
